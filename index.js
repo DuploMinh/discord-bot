@@ -1,7 +1,7 @@
 const fs = require('fs');
 const Discord = require('discord.js');
 const Client = require('./client/Client');
-const {token} = require('./config.json');
+const config = require('./config.json');
 const {Player} = require('discord-player');
 
 const client = new Client();
@@ -27,7 +27,7 @@ player.on('connectionError', (queue, error) => {
 });
 
 player.on('trackStart', (queue, track) => {
-  queue.metadata.send(`🎶 | Started playing: **${track.title}** in **${queue.connection.channel.name}**!`);
+  queue.metadata.send(`▶ | Started playing: **${track.title}** in **${queue.connection.channel.name}**!`);
 });
 
 player.on('trackAdd', (queue, track) => {
@@ -50,6 +50,10 @@ client.once('ready', async () => {
   console.log('Ready!');
 });
 
+client.on('ready', function() {
+  client.user.setActivity(config.activity, { type: config.activityType });
+});
+
 client.once('reconnecting', () => {
   console.log('Reconnecting!');
 });
@@ -58,17 +62,19 @@ client.once('disconnect', () => {
   console.log('Disconnect!');
 });
 
-client.on("messageCreate", async (message) => {
+client.on('messageCreate', async message => {
   if (message.author.bot || !message.guild) return;
   if (!client.application?.owner) await client.application?.fetch();
 
-  if (message.content === "!deploy" && message.author.id === client.application?.owner?.id) {
-      await message.guild.commands.set(client.commands).then(() => {
-        message.reply("Deployed!");
+  if (message.content === '!deploy' && message.author.id === client.application?.owner?.id) {
+    await message.guild.commands
+      .set(client.commands)
+      .then(() => {
+        message.reply('Deployed!');
       })
-      .catch((err) => {
-        message.reply("Could not deploy commands! Make sure the bot has the application.commands permission!");
-        console.error(err)
+      .catch(err => {
+        message.reply('Could not deploy commands! Make sure the bot has the application.commands permission!');
+        console.error(err);
       });
   }
 });
@@ -90,4 +96,4 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-client.login(token);
+client.login(config.token);
